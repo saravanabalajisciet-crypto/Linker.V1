@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>EMR – Hospital</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link
+ rel="stylesheet"
+ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+
+<style>
+body{
+ margin:0;
+ font-family:Arial;
+ background:#f4f6f8;
+}
+
+header{
+ background:#457b9d;
+ color:white;
+ padding:14px;
+ text-align:center;
+ font-size:18px;
+}
+
+#map{
+ height:45vh;
+}
+
+.dashboard{
+ padding:15px;
+}
+
+.card{
+ background:white;
+ padding:15px;
+ border-radius:8px;
+ margin-bottom:12px;
+ box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+.card h3{
+ margin-top:0;
+}
+
+input,button{
+ width:100%;
+ padding:10px;
+ margin-top:6px;
+ font-size:16px;
+}
+
+button{
+ background:#1d3557;
+ color:white;
+ border:none;
+ border-radius:6px;
+ cursor:pointer;
+}
+
+.status{
+ font-weight:bold;
+ text-align:center;
+ margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>🏥 Hospital Dashboard</header>
+
+<div id="map"></div>
+
+<div class="dashboard">
+
+<div class="card">
+<h3>🛏 Bed Availability</h3>
+<input type="number" id="beds" placeholder="Available Beds">
+<button onclick="updateBeds()">Update Beds</button>
+</div>
+
+<div class="card">
+<h3>🚑 Incoming Emergency</h3>
+<div id="emergencyStatus">No active emergency</div>
+</div>
+
+<div class="card">
+<h3>📊 Hospital Status</h3>
+<div class="status" id="hospitalStatus">Monitoring...</div>
+</div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+const API="http://127.0.0.1:8000";
+const hospitalName="Apollo";   // 🔴 change if needed
+
+const map=L.map('map').setView([13.0810,80.2710],14);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+ maxZoom:19
+}).addTo(map);
+
+const hospitalMarker=L.marker([13.0810,80.2710])
+ .addTo(map)
+ .bindPopup("🏥 "+hospitalName)
+ .openPopup();
+
+let emMarker=null;
+
+async function updateBeds(){
+ let beds=document.getElementById("beds").value;
+ alert("Beds Updated: "+beds+" (Demo purpose)");
+}
+
+async function checkStatus(){
+ let res=await fetch(API+"/status");
+ let data=await res.json();
+
+ // Emergency reserved
+ if(data.emergency && data.emergency.hospital===hospitalName){
+  document.getElementById("emergencyStatus").innerText=
+   "🚨 Ambulance incoming (Driver: "+data.emergency.driver+")";
+
+  if(!emMarker){
+   emMarker=L.marker([data.emergency.lat,data.emergency.lng])
+    .addTo(map)
+    .bindPopup("🚑 Incoming Emergency")
+    .openPopup();
+  }
+ }
+
+ // Hospital data
+ if(data.hospitals[hospitalName]){
+  document.getElementById("hospitalStatus").innerText=
+   "Available Beds: "+data.hospitals[hospitalName].beds;
+ }
+}
+
+setInterval(checkStatus,2000);
+</script>
+
+</body>
+</html>

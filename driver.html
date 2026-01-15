@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Driver Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+html,body{
+ height:100%;
+ margin:0;
+ font-family:Arial;
+}
+
+#map{
+ height:100%;
+ width:100%;
+}
+
+/* Bottom Control Panel */
+.panel{
+ position:fixed;
+ bottom:0;
+ left:0;
+ right:0;
+ background:white;
+ padding:15px;
+ box-shadow:0 -2px 10px rgba(0,0,0,0.2);
+ border-radius:15px 15px 0 0;
+ z-index:999;
+}
+
+button{
+ width:100%;
+ padding:14px;
+ margin-top:10px;
+ font-size:16px;
+ border:none;
+ border-radius:8px;
+ background:#1d3557;
+ color:white;
+}
+
+.status{
+ font-size:14px;
+ color:#333;
+ margin-bottom:5px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<div class="panel">
+ <div class="status" id="status">Waiting for emergency...</div>
+ <button onclick="accept()">Accept Emergency</button>
+ <button onclick="reserve()">Reserve Apollo Hospital</button>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+const API="http://127.0.0.1:8000";
+const DRIVER="DRV1";
+
+let map=L.map('map',{zoomControl:false}).setView([13.0827,80.2707],15);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+ maxZoom:19
+}).addTo(map);
+
+let driverMarker=L.marker([13.0827,80.2707]).addTo(map)
+ .bindPopup("🚑 You");
+
+let emergencyMarker=null;
+
+// Accept Emergency
+async function accept(){
+ await fetch(API+"/driver_accept",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({driver:DRIVER})
+ });
+ alert("Emergency Accepted");
+}
+
+// Reserve Hospital
+async function reserve(){
+ let r=await fetch(API+"/reserve_hospital",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({hospital:"Apollo"})
+ });
+ let d=await r.json();
+ alert(d.message || d.error);
+}
+
+// Live Update
+async function refresh(){
+ let r=await fetch(API+"/status");
+ let data=await r.json();
+
+ if(data.emergency){
+  document.getElementById("status").innerText =
+   "Emergency Status: "+data.emergency.status;
+
+  if(!emergencyMarker){
+   emergencyMarker=L.marker(
+    [data.emergency.lat,data.emergency.lng]
+   ).addTo(map).bindPopup("🚨 Emergency");
+  }
+ }
+
+ if(data.drivers && data.drivers[DRIVER]){
+  let d=data.drivers[DRIVER];
+  driverMarker.setLatLng([d.lat,d.lng]);
+ }
+}
+
+setInterval(refresh,2000);
+</script>
+
+</body>
+</html>

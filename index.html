@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>EMR – User</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link
+ rel="stylesheet"
+ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+
+<style>
+body{
+ margin:0;
+ font-family:Arial;
+ background:#f4f6f8;
+}
+
+header{
+ background:#e63946;
+ color:white;
+ padding:12px;
+ text-align:center;
+ font-size:18px;
+}
+
+#map{
+ height:70vh;
+}
+
+.panel{
+ padding:15px;
+ background:white;
+}
+
+button{
+ width:100%;
+ padding:12px;
+ font-size:16px;
+ border:none;
+ border-radius:6px;
+ background:#1d3557;
+ color:white;
+ cursor:pointer;
+}
+
+#status{
+ margin-top:10px;
+ font-weight:bold;
+ text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<header>🚨 Emergency Request</header>
+
+<div id="map"></div>
+
+<div class="panel">
+<button onclick="createEmergency()">🚑 Request Ambulance</button>
+<div id="status">Waiting for action...</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+const API="http://127.0.0.1:8000";
+let popupShown=false;
+
+const map=L.map('map').setView([13.0827,80.2707],14);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+ maxZoom:19
+}).addTo(map);
+
+const userMarker=L.marker([13.0827,80.2707]).addTo(map)
+ .bindPopup("📍 You").openPopup();
+
+async function createEmergency(){
+ await fetch(API+"/create_emergency",{
+  method:"POST",
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({
+   lat:13.0827,
+   lng:80.2707
+  })
+ });
+
+ document.getElementById("status").innerText="🚨 Emergency Created";
+ setInterval(checkStatus,2000);
+}
+
+async function checkStatus(){
+ let res=await fetch(API+"/emergency");
+ let data=await res.json();
+ if(!data) return;
+
+ if(data.status==="accepted"){
+  document.getElementById("status").innerText=
+   "🚑 Driver Assigned: "+data.driver;
+
+  if(!popupShown){
+   alert("🚑 Ambulance Driver Assigned!");
+   popupShown=true;
+  }
+ }
+
+ if(data.status==="hospital_reserved"){
+  document.getElementById("status").innerText=
+   "🏥 Hospital Reserved: "+data.hospital;
+ }
+}
+</script>
+
+</body>
+</html>

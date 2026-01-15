@@ -1,0 +1,11 @@
+<h3>Admin Monitor</h3>
+<pre id="log"></pre>
+
+<script>
+setInterval(()=>{
+ fetch("http://127.0.0.1:8000/status")
+ .then(r=>r.json()).then(s=>{
+  log.innerText=JSON.stringify(s,null,2);
+ })
+},2000)
+</script>
