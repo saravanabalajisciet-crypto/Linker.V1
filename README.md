@@ -13,3 +13,45 @@ Users, Ambulance Drivers, and Hospitals.
 - FastAPI
 - HTML/CSS/JS
 - Leaflet Maps
+
+Demo Video
+https://www.loom.com/share/517c3926c8dd4729bb103bd2e94a8cee
+
+Running Instructions
+
+Python 3.9+
+Git
+Any modern browser (Chrome / Edge)
+🔹 1. Clone Repository
+Copy code
+Bash
+git clone https://github.com/yourusername/EMR-System.git
+cd EMR-System
+🔹 2. Backend Setup
+Copy code
+Bash
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+🔹 3. Run Backend Server
+Copy code
+Bash
+uvicorn app:app --reload
+✔ Server will start at:
+Copy code
+
+http://127.0.0.1:8000
+🔹 4. Frontend Setup
+Open the following files directly in browser:
+Copy code
+
+frontend/index.html    → User App
+frontend/driver.html   → Ambulance Driver App
+frontend/hospital.html → Hospital Admin Dashboard
+(No build step required)
+🔹 5. Demo Flow
+Open index.html → Create Emergency
+Open driver.html → Accept Emergency
+Reserve Hospital from Driver Dashboard
+Open hospital.html → Update beds
